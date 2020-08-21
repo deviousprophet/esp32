@@ -11,7 +11,7 @@ const char* ssid = "ssid";
 const char* password = "password";
 const char* mqttServer = "server IP";
 const int mqttPort = 1883;
-const char* subTopic = "";
+//const char* subTopic = "";
 const char* pubTopic = "";
 
 int ir1, ir2, in_out_stat;
@@ -44,7 +44,7 @@ void connect_mqtt() {
       
       if (client.connect("ESP8266Client")) {
         Serial.println("MQTT connected");
-        client.subscribe(subTopic);
+        //client.subscribe(subTopic);
       } else {
         Serial.print("failed with state ");
         Serial.print(client.state());
