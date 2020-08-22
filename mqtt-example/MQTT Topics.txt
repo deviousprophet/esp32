@@ -24,7 +24,8 @@ Wildcards: There are two different kinds of wildcards: single-level and multi-le
 		home/floor1/livingroom/temperature		no (floor1)
 		home/floor2/livingroom/brightness		no (brightness)
 		home/floor2/kitchen/fridge/temperature		no (fridge)
-    Multi Level: #
+
+     Multi Level: #
 			multi level
 			 wildcard
 			    | 
