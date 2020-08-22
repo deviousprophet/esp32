@@ -4,10 +4,10 @@
 #define PIR1  12
 #define PIR2  14
 
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "ssid";
+const char* password = "password";
 const char* mqttServer = "";
-const int mqttPort = 1883;
+const int   mqttPort = 1883;
 //const char* subTopic = "";
 const char* pubTopic = "room1/esp32/sensor/pir/mainroom";
 

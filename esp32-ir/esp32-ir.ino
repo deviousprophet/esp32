@@ -1,5 +1,5 @@
-//  IR1 -> IR2 : in
-//  IR2 -> IR1 : out
+//  IR1 --> IR2 : in
+//  IR2 --> IR1 : out
 
 #include <WiFi.h>
 #include <PubSubClient.h>
@@ -10,7 +10,7 @@
 const char* ssid = "ssid";
 const char* password = "password";
 const char* mqttServer = "server IP";
-const int mqttPort = 1883;
+const int   mqttPort = 1883;
 //const char* subTopic = "";
 const char* pubTopic = "room1/esp32/sensor/ir";
 

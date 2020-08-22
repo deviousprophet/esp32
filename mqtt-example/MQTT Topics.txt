@@ -1,0 +1,41 @@
+In MQTT, the word topic refers to an UTF-8 string that the broker uses to filter messages
+for each connected client. The topic consists of one or more topic levels. Each topic level
+is separated by a forward slash (topic level separator).
+
+		topic level
+		 seperator
+		     |
+		     v
+		home/livingroom/lamp
+
+Wildcards: There are two different kinds of wildcards: single-level and multi-level
+    Single Level: +
+			single level
+			  wildcard
+			     |
+			     v
+		 home/floor2/+/temperature
+			      \
+			   only one level
+
+	emxample a subscription to "home/floor2/+/temperature":
+		home/floor2/livingroom/temperature		yes
+		home/floor2/kitchen/temperature			yes
+		home/floor1/livingroom/temperature		no (floor1)
+		home/floor2/livingroom/brightness		no (brightness)
+		home/floor2/kitchen/fridge/temperature		no (fridge)
+    Multi Level: #
+			multi level
+			 wildcard
+			    | 
+			    v
+		home/floor2/#
+			   /  \
+		    only at	multiple topic
+		    the end	    levels
+
+	emxample a subscription to "home/floor2/#":
+		home/floor2/livingroom/temperature		yes
+		home/floor2/kitchen/brightness			yes
+		home/floor2/bedroom/brightness			yes
+		home/floor1/kitchen/temperature			no (floor1)

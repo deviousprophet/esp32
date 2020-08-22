@@ -1,14 +1,12 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-#define PIR   12
-
 const char* ssid = "ssid";
 const char* password = "password";
-const char* mqttServer = "";
-const int   mqttPort = 1883;
+const char* mqttServer = "server IP";
+const int mqttPort = 1883;
 //const char* subTopic = "";
-const char* pubTopic = "room1/esp32/sensor/pir/bathroom";
+//const char* pubTopic = "";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -49,7 +47,7 @@ void connect_mqtt() {
 }
 
 void setup() {
-  Serial.begin(115200);  
+  Serial.begin(115200);
   WiFi.begin(ssid, password);
   WiFi.setAutoReconnect(true);
   while (WiFi.status() != WL_CONNECTED) {
@@ -62,4 +60,7 @@ void setup() {
 void loop() {
   connect_mqtt();
   client.loop();
+
+//  client.publish(pubTopic, "pub");
+//  delay(5000);
 }
