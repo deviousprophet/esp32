@@ -1,20 +1,14 @@
-//  IR1 -> IR2 : in
-//  IR2 -> IR1 : out
-
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-#define IR1   12
-#define IR2   14
+#define PIR   12
 
-const char* ssid = "ssid";
-const char* password = "password";
-const char* mqttServer = "server IP";
+const char* ssid = "";
+const char* password = "";
+const char* mqttServer = "";
 const int mqttPort = 1883;
 //const char* subTopic = "";
-const char* pubTopic = "room1/esp32/sensor/ir";
-
-int ir1, ir2, in_out_stat;
+const char* pubTopic = "room1/esp32/sensor/pir/bathroom";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -55,10 +49,7 @@ void connect_mqtt() {
 }
 
 void setup() {
-  Serial.begin(115200);
-  pinMode(IR1, INPUT);
-  pinMode(IR2, INPUT);
-  
+  Serial.begin(115200);  
   WiFi.begin(ssid, password);
   WiFi.setAutoReconnect(true);
   while (WiFi.status() != WL_CONNECTED) {
@@ -71,36 +62,4 @@ void setup() {
 void loop() {
   connect_mqtt();
   client.loop();
-  
-  ir1 = digitalRead(IR1);
-  ir2 = digitalRead(IR2);
-  
-  if ((ir1 == HIGH) && (ir2 == HIGH)) {
-    if (in_out_stat == 3) {
-      Serial.println("in");
-      client.publish(pubTopic, "in");
-    } else if (in_out_stat == -3) {
-      Serial.println("out");
-      client.publish(pubTopic, "out");
-    }
-    in_out_stat = 0;
-  } else if ((ir1 == LOW) && (ir2 == HIGH)) {
-    if (in_out_stat == -2) {
-      in_out_stat = -3;
-    } else if ((in_out_stat == 0) || (in_out_stat == 2)) {
-      in_out_stat = 1;
-    }
-  } else if ((ir1 == LOW) && (ir2 == LOW)) {
-    if ((in_out_stat == 1) || (in_out_stat == 3)) {
-      in_out_stat = 2;
-    } else if ((in_out_stat == -1) || (in_out_stat == -3)) {
-      in_out_stat = -2;
-    }
-  } else {
-    if (in_out_stat == 2) {
-      in_out_stat = 3;
-    } else if ((in_out_stat == 0) || (in_out_stat == -2)) {
-      in_out_stat = -1;
-    }
-  }
 }
