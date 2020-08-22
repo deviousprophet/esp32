@@ -11,8 +11,8 @@ const char* ssid = "ssid";
 const char* password = "password";
 const char* mqttServer = "server IP";
 const int   mqttPort = 1883;
-//const char* subTopic = "";
-const char* pubTopic = "room1/esp32/sensor/ir";
+//const char* subTopic = "hotel/room-1/admin";
+const char* pubTopic = "hotel/room-1/esp32/sensor/ir";
 
 int ir1, ir2, in_out_stat;
 

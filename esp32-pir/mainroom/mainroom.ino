@@ -8,8 +8,8 @@ const char* ssid = "ssid";
 const char* password = "password";
 const char* mqttServer = "";
 const int   mqttPort = 1883;
-//const char* subTopic = "";
-const char* pubTopic = "room1/esp32/sensor/pir/mainroom";
+//const char* subTopic = "hotel/room-1/admin";
+const char* pubTopic = "hotel/room-1/esp32/sensor/pir/mainroom";
 
 WiFiClient espClient;
 PubSubClient client(espClient);

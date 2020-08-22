@@ -1,12 +1,15 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-const char* ssid = "ssid";
-const char* password = "password";
-const char* mqttServer = "server IP";
+const char* ssid = "LATITUDE-E6420";
+const char* password = "31121998";
+const char* mqttServer = "192.168.137.1";
 const int   mqttPort = 1883;
-const char* subTopic = "room1/esp32/sensor/#";
-const char* pubTopic = "room1/esp32/relay";
+const char* subTopic = "hotel/room-1/#";
+const char* pubTopic = "hotel/room-1/esp32/relay";
+
+boolean pir = false;
+int human_count = 0;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -20,6 +23,30 @@ void callback(char* topic, byte* payload, unsigned int length) {
   for (int i = 0; i < length; i++) {
     temp_mess += (char)payload[i];
     Serial.print((char)payload[i]);
+  }
+
+  if (topic == "hotel/room-1/esp32/sensor/ir") {
+    if (temp_mess == "in") {
+      if (human_count > 0) {
+        human_count += 1;
+        Serial.println(human_count);
+      } else {
+        pir = true;
+      }
+    } else if (temp_mess == "out") {
+      if (human_count > 0) {
+        human_count -= 1;
+      }
+    }
+  } else if (topic == "hotel/room-1/esp32/sensor/pir/mainroom"){
+    if (pir) {
+      human_count += 1;
+      Serial.println(human_count);
+      pir = false;
+    } else if (human_count == 0) {
+      human_count += 1;
+      Serial.println(human_count);
+    }
   }
   
   Serial.println();
