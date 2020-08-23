@@ -1,12 +1,12 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-#define PIR1  12
-#define PIR2  14
+#define PIR1  16
+#define PIR2  17
 
-const char* ssid = "ssid";
-const char* password = "password";
-const char* mqttServer = "";
+const char* ssid = "LATITUDE-E6420";
+const char* password = "31121998";
+const char* mqttServer = "192.168.137.1";
 const int   mqttPort = 1883;
 //const char* subTopic = "hotel/room-1/admin";
 const char* pubTopic = "hotel/room-1/esp32/sensor/pir/mainroom";

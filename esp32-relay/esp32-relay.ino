@@ -16,19 +16,18 @@ PubSubClient client(espClient);
 
 void callback(char* topic, byte* payload, unsigned int length) {
   String temp_mess = "";
-  Serial.print("Message arrived in topic: ");
-  Serial.println(topic);
-  
-  Serial.print("Message:");
   for (int i = 0; i < length; i++) {
     temp_mess += (char)payload[i];
     Serial.print((char)payload[i]);
   }
+  Serial.println();
+  Serial.println("-----------------------");
 
-  if (topic == "hotel/room-1/esp32/sensor/ir") {
+  if ((String)topic == "hotel/room-1/esp32/sensor/ir") {
     if (temp_mess == "in") {
       if (human_count > 0) {
         human_count += 1;
+        Serial.print("Number of guests: ");
         Serial.println(human_count);
       } else {
         pir = true;
@@ -36,21 +35,18 @@ void callback(char* topic, byte* payload, unsigned int length) {
     } else if (temp_mess == "out") {
       if (human_count > 0) {
         human_count -= 1;
+        Serial.print("Number of guests: ");
+        Serial.println(human_count);
       }
     }
-  } else if (topic == "hotel/room-1/esp32/sensor/pir/mainroom"){
-    if (pir) {
-      human_count += 1;
-      Serial.println(human_count);
+  } else if ((String)topic == "hotel/room-1/esp32/sensor/pir/mainroom") {
+    if (pir || (human_count == 0)) {
       pir = false;
-    } else if (human_count == 0) {
       human_count += 1;
+      Serial.print("Number of guests: ");
       Serial.println(human_count);
     }
   }
-  
-  Serial.println();
-  Serial.println("-----------------------");
 }
 
 void connect_mqtt() {
@@ -63,7 +59,7 @@ void connect_mqtt() {
       
       if (client.connect("ESP8266Client")) {
         Serial.println("MQTT connected");
-        //client.subscribe(subTopic);
+        client.subscribe(subTopic);
       } else {
         Serial.print("failed with state ");
         Serial.print(client.state());
@@ -71,6 +67,14 @@ void connect_mqtt() {
       }
     }
   }
+}
+
+void relay_on() {
+  Serial.println("relay on");
+}
+
+void relay_off() {
+  Serial.println("relay off");
 }
 
 void setup() {
