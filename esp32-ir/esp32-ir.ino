@@ -12,7 +12,7 @@ const char* password = "password";
 const char* mqttServer = "server IP";
 const int   mqttPort = 1883;
 //const char* subTopic = "hotel/room-1/admin";
-const char* pubTopic = "hotel/room-1/esp32/sensor/ir";
+const char* pubTopic = "hotel/room-1/sensor/ir";
 
 int ir1, ir2, in_out_stat;
 
@@ -75,7 +75,7 @@ void loop() {
   ir1 = digitalRead(IR1);
   ir2 = digitalRead(IR2);
   
-  if ((ir1 == HIGH) && (ir2 == HIGH)) {
+  if (ir1 && ir2) {
     if (in_out_stat == 3) {
       Serial.println("in");
       client.publish(pubTopic, "in");
@@ -84,13 +84,13 @@ void loop() {
       client.publish(pubTopic, "out");
     }
     in_out_stat = 0;
-  } else if ((ir1 == LOW) && (ir2 == HIGH)) {
+  } else if (!ir1 && ir2) {
     if (in_out_stat == -2) {
       in_out_stat = -3;
     } else if ((in_out_stat == 0) || (in_out_stat == 2)) {
       in_out_stat = 1;
     }
-  } else if ((ir1 == LOW) && (ir2 == LOW)) {
+  } else if (!ir1 && !ir2) {
     if ((in_out_stat == 1) || (in_out_stat == 3)) {
       in_out_stat = 2;
     } else if ((in_out_stat == -1) || (in_out_stat == -3)) {
