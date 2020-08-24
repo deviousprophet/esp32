@@ -6,10 +6,10 @@ const char* password = "31121998";
 const char* mqttServer = "192.168.137.1";
 const int   mqttPort = 1883;
 const char* subTopic = "hotel/room-1/#";
-const char* pubTopic = "hotel/room-1/esp32/relay";
+const char* pubTopic = "hotel/room-1/relay";
 
-boolean pir = false;
 int human_count = 0;
+int pir_main, pir_bath;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -23,15 +23,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println();
   Serial.println("-----------------------");
 
-  if ((String)topic == "hotel/room-1/esp32/sensor/ir") {
+  if ((String)topic == "hotel/room-1/sensor/ir") {
     if (temp_mess == "in") {
-      if (human_count > 0) {
-        human_count += 1;
-        Serial.print("Number of guests: ");
-        Serial.println(human_count);
-      } else {
-        pir = true;
-      }
+      human_count += 1;
+      Serial.print("Number of guests: ");
+      Serial.println(human_count);
     } else if (temp_mess == "out") {
       if (human_count > 0) {
         human_count -= 1;
@@ -39,13 +35,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
         Serial.println(human_count);
       }
     }
-  } else if ((String)topic == "hotel/room-1/esp32/sensor/pir/mainroom") {
-    if (pir || (human_count == 0)) {
-      pir = false;
-      human_count += 1;
-      Serial.print("Number of guests: ");
-      Serial.println(human_count);
-    }
+  } else if ((String)topic == "hotel/room-1/sensor/pir/mainroom") {
+    pir_main = temp_mess.toInt();
+  } else if ((String)topic == "hotel/room-1/sensor/pir/bathroom") {
+    pir_bath = temp_mess.toInt();
+  }
+  if (human_count < pir_main + pir_bath) {
+    human_count = pir_main + pir_bath;
   }
 }
 
