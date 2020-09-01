@@ -1,5 +1,0 @@
-hotel/room-1/admin
-hotel/room-1/relay
-hotel/room-1/sensor/ir
-hotel/room-1/sensor/pir/mainroom
-hotel/room-1/sensor/pir/bathroom

@@ -1,0 +1,27 @@
+PIR
+	Sub
+	hotel/room-1/admin
+	
+	Pub
+	hotel/room-1/pir/mainroom
+	hotel/room-1/pir/bathroom
+
+RELAY
+	Sub
+	hotel/room-1/admin
+
+	Pub
+	hotel/room-1/relay
+
+PIR
+	Sub
+	hotel/room-1/admin
+
+	Pub
+	hotel/room-1/ir
+SCRIPT
+	Sub
+	hotel/+/relay
+
+	Pub
+	hotel/room-1/admin
