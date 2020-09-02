@@ -19,6 +19,7 @@ PIR
 
 	Pub
 	hotel/room-1/ir
+
 SCRIPT
 	Sub
 	hotel/+/relay
