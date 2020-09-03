@@ -3,6 +3,8 @@ import paho.mqtt.client as mqtt
 broker_address = "192.168.137.1"
 subTopic = "hotel/+/relay"
 hotel = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+#4 floors, 5 rooms per floor
+# floor 1: room 101 -> 105
 
 def on_message(client, userdata, message):
     global hotel
@@ -18,6 +20,9 @@ def on_message(client, userdata, message):
 
     hotel[room_floor-1][floor-1] = _data
     print(hotel)
+    print("By floors")
+    for i in hotel:
+        print(i)
 
 def on_disconnect (client, userdata, rc):
     print("Disconnected")
@@ -25,6 +30,13 @@ def on_disconnect (client, userdata, rc):
 def on_connect (client, obj, flags, rc):
     print("Connected")
     client.subscribe(subTopic)
+    polling_relay()
+
+def polling_relay():
+    for floor in range(4):
+        for room in range(5):
+            room_num = str((floor + 1)*100 + room + 1)
+            client.publish("hotel/" + room_num + "/admin", "RELAY_STAT")
 
 client = mqtt.Client()
 client.on_message=on_message
