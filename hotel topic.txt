@@ -1,28 +1,30 @@
 PIR
 	Sub
-	hotel/room-1/admin
+	hotel/101/admin
 	
 	Pub
-	hotel/room-1/pir/mainroom
-	hotel/room-1/pir/bathroom
+	hotel/101/pir/mainroom
+	hotel/101/pir/bathroom
 
 RELAY
 	Sub
-	hotel/room-1/admin
+	hotel/101/admin
 
 	Pub
-	hotel/room-1/relay
+	hotel/101/relay
 
 PIR
 	Sub
-	hotel/room-1/admin
+	hotel/101/admin
 
 	Pub
-	hotel/room-1/ir
+	hotel/101/ir
 
 SCRIPT
 	Sub
 	hotel/+/relay
 
 	Pub
-	hotel/room-1/admin
+	hotel/101/admin
+	hotel/102/admin
+	...
