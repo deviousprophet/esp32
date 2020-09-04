@@ -1,4 +1,6 @@
 import paho.mqtt.client as mqtt
+import pymongo
+import time
 
 broker_address = "192.168.137.1"
 subTopic = "hotel/+/relay"
@@ -37,6 +39,17 @@ def polling_relay():
         for room in range(5):
             room_num = str((floor + 1)*100 + room + 1)
             client.publish("hotel/" + room_num + "/admin", "RELAY_STAT")
+
+mongo_client = pymongo.MongoClient(
+   "mongodb+srv://minhtaile2712:imissyou@cluster0-wyhfl.mongodb.net/test?retryWrites=true&w=majority")
+db = mongo_client.dev
+
+# post = db.hotel
+# post_data = {
+#     "hotel_relay": hotel
+# }
+# result = post.insert_one(post_data)
+# print('Posted: {0}'.format(result.inserted_id))
 
 client = mqtt.Client()
 client.on_message=on_message
