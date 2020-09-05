@@ -1,38 +1,44 @@
 import paho.mqtt.client as mqtt
 import pymongo
 import time
+import threading
 
 broker_address = "192.168.137.1"
 subTopic = "hotel/+/relay"
-hotel = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
-#4 floors, 5 rooms per floor
-# floor 1: room 101 -> 105
+localRooms = []
+temp_localRooms = []
 
 def on_message(client, userdata, message):
-    global hotel
+    global localRooms
     _topic = str(message.topic)
-    _data = int(str(message.payload.decode("utf-8")))
+    _data = bool(int(str(message.payload.decode("utf-8"))))
 
     start = "hotel/"
     end = "/relay"
     room = int(_topic[len(start):-len(end)])
+    print(room, _data)
     
-    room_floor = room%100
-    floor = int(room/100)
+    for localRoom in localRooms:
+        if localRoom['name'] == room:
+            localRoom['state'] = _data
 
-    hotel[floor-1][room_floor-1] = _data
-    print(hotel)
-    print("By floors")
-    for i in hotel:
-        print(i)
+    writebacktodb()
 
 def on_disconnect (client, userdata, rc):
-    print("Disconnected")
+    print("MQTT Disconnected")
 
 def on_connect (client, obj, flags, rc):
-    print("Connected")
+    print("MQTT Connected")
     client.subscribe(subTopic)
     polling_relay()
+
+def mqtt_client():
+    client.on_message=on_message
+    client.on_connect=on_connect
+    client.on_disconnect=on_disconnect
+    client.connect(broker_address)
+    print("Connecting MQTT...")
+    client.loop_forever()
 
 def polling_relay():
     for floor in range(4):
@@ -40,21 +46,50 @@ def polling_relay():
             room_num = str((floor + 1)*100 + room + 1)
             client.publish("hotel/" + room_num + "/admin", "RELAY_STAT")
 
+def initfromdb():
+    for room in dbRooms.find({}, projection={'_id': False, 'name': True, 'state': True}):
+        localRooms.append(room)
+        temp_localRooms.append(room)
+    for room in localRooms:
+        print(room)
+
+def retfromdb():
+    for dbRoom in dbRooms.find({}, projection={'_id': False, 'name': True, 'state': True}):
+        for localRoom in temp_localRooms:
+            if localRoom['name'] == dbRoom['name']:
+                localRoom['state'] = dbRoom['state']
+
+def writebacktodb():
+    for room in localRooms:
+        dbRooms.find_one_and_update({'name': room['name']}, {'$set': {'state': room['state']}})
+
+def db_read():
+    while(1):
+        retfromdb()
+        # for i in temp_localRooms:
+        #     print(i)
+        time.sleep(1)
+
+def db_change():
+    global localRooms
+    global temp_localRooms
+    while(1):
+        print("====================")
+        for i in range(8):
+            if (localRooms == temp_localRooms):
+                print(temp_localRooms)
+        time.sleep(1)
+
 mongo_client = pymongo.MongoClient(
    "mongodb+srv://minhtaile2712:imissyou@cluster0-wyhfl.mongodb.net/test?retryWrites=true&w=majority")
-db = mongo_client.dev
-
-# post = db.hotel
-# post_data = {
-#     "hotel_relay": hotel
-# }
-# result = post.insert_one(post_data)
-# print('Posted: {0}'.format(result.inserted_id))
+db = mongo_client.test
+dbRooms = db.rooms
+initfromdb()
 
 client = mqtt.Client()
-client.on_message=on_message
-client.on_connect=on_connect
-client.on_disconnect=on_disconnect
-client.connect(broker_address)
-print("Connecting...")
-client.loop_forever()
+mqtt_thread = threading.Thread(target=mqtt_client)
+mqtt_thread.start()
+db_thread = threading.Thread(target=db_read)
+db_thread.start()
+array_thead = threading.Thread(target=db_change)
+array_thead.start()
