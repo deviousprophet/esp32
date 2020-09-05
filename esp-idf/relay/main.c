@@ -11,21 +11,21 @@
 #include "nvs_flash.h"
 #include "mqtt_client.h"
 
-#define GPIO_INPUT_IR1          GPIO_NUM_12
-#define GPIO_INPUT_IR2          GPIO_NUM_14
-#define GPIO_INPUT_PIN_SEL      ((1ULL<<GPIO_INPUT_IR1) | (1ULL<<GPIO_INPUT_IR2))
+#define GPIO_RELAY      GPIO_NUM_12
+#define GPIO_SEL_PIN    1ULL<<GPIO_RELAY
 
 #define WIFI_SSID       "Hotspot-LATITUDE-E6420"
 #define WIFI_PASS       "31121998"
 #define MQTT_SERVER     "mqtt://192.168.137.1"
 
 #define ROOM_NUM        "101"
-#define SUB_TOPIC       "hotel/" ROOM_NUM "/admin"
-#define PUB_TOPIC       "hotel/" ROOM_NUM "/ir"
+#define SUB_TOPIC       "hotel/" ROOM_NUM "/#"
+#define PUB_TOPIC       "hotel/" ROOM_NUM "/relay"
 
 bool mqtt_en = false;
+int human_cnt = 0;
 
-static const char *TAG = "MQTT_IR";
+static const char *TAG = "MQTT_RELAY";
 
 esp_mqtt_client_handle_t client;
 
@@ -64,8 +64,31 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
             _data[event->data_len] = '\0';
             // _topic: Topic string
             // _data: Data string
-            if (strcmp(_data, "IR_CHECK") == 0) {
-                esp_mqtt_client_publish(client, PUB_TOPIC, ROOM_NUM "_ir_ready", 0, 0, 0);
+            if (strcmp(_topic, "hotel/" ROOM_NUM "/admin") == 0) {
+                if (strcmp(_data, "RELAY_STAT") == 0) {
+                    esp_mqtt_client_publish(client, PUB_TOPIC, (gpio_get_level(GPIO_RELAY) == 0)?"1":"0", 0, 0, 0);
+                } else if (strcmp(_data, "RELAY_ON") == 0) {
+                    gpio_set_level(GPIO_RELAY, 0);
+                    esp_mqtt_client_publish(client, PUB_TOPIC, (gpio_get_level(GPIO_RELAY) == 0)?"1":"0", 0, 0, 0);
+                } else if (strcmp(_data, "RELAY_OFF") == 0) {
+                    gpio_set_level(GPIO_RELAY, 1);
+                    esp_mqtt_client_publish(client, PUB_TOPIC, (gpio_get_level(GPIO_RELAY) == 0)?"1":"0", 0, 0, 0);
+                } else if (strcmp(_data, "RELAY_CHECK") == 0) {
+                    esp_mqtt_client_publish(client, PUB_TOPIC, ROOM_NUM "_relay_ready", 0, 0, 0);
+                } else if (strcmp(_data, "ADMIN_RESET") == 0) {
+                    human_cnt = 0;
+                    printf("Count: %d\n" ,human_cnt);
+                }
+            } else if (strcmp(_topic, "hotel/" ROOM_NUM "/ir") == 0) {
+                if (strcmp(_data, "in") == 0) {
+                    human_cnt++;
+                } else if (strcmp(_data, "out") == 0) {
+                    if (human_cnt > 0){
+                        human_cnt--;
+                    }
+                }
+                (human_cnt > 0) ? gpio_set_level(GPIO_RELAY, 0) : gpio_set_level(GPIO_RELAY, 1);;
+                printf("Count: %d\n" ,human_cnt);
             }
             break;
         case MQTT_EVENT_ERROR:
@@ -124,54 +147,13 @@ void wifi_init_sta() {
     esp_wifi_start();
 }
 
-void read_ir() {
-    int in_out_stat = 0;
-    
-    while(1) {
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-        if (mqtt_en) {
-            int ir1 = gpio_get_level(GPIO_INPUT_IR1);
-            int ir2 = gpio_get_level(GPIO_INPUT_IR2);
-
-            if (ir1 && ir2) {
-                if (in_out_stat == 3) {
-                    printf("in\n");
-                    esp_mqtt_client_publish(client, PUB_TOPIC, "in", 0, 0, 0);
-                } else if (in_out_stat == -3) {
-                    printf("out\n");
-                    esp_mqtt_client_publish(client, PUB_TOPIC, "out", 0, 0, 0);
-                }
-                in_out_stat = 0;
-            } else if (!ir1 && ir2) {
-                if (in_out_stat == -2) {
-                    in_out_stat = -3;
-                } else if ((in_out_stat == 0) || (in_out_stat == 2)) {
-                    in_out_stat = 1;
-                }
-            } else if (!ir1 && !ir2) {
-                if ((in_out_stat == 1) || (in_out_stat == 3)) {
-                    in_out_stat = 2;
-                } else if ((in_out_stat == -1) || (in_out_stat == -3)) {
-                    in_out_stat = -2;
-                }
-            } else {
-                if (in_out_stat == 2) {
-                    in_out_stat = 3;
-                } else if ((in_out_stat == 0) || (in_out_stat == -2)) {
-                    in_out_stat = -1;
-                }
-            }
-        }
-    }
-}
-
 void gpioConf() {
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
-    io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
+    io_conf.mode = GPIO_MODE_INPUT_OUTPUT;
+    io_conf.pin_bit_mask = GPIO_SEL_PIN;
     io_conf.pull_down_en = 0;
-    io_conf.pull_up_en = 1;
+    io_conf.pull_up_en = 0;
     gpio_config(&io_conf);
 }
 
@@ -182,5 +164,5 @@ void app_main() {
     esp_event_loop_create_default();
     wifi_init_sta();
     gpioConf();
-    read_ir();
+    gpio_set_level(GPIO_RELAY, 1);
 }

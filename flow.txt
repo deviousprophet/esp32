@@ -1,0 +1,48 @@
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+*RELAY
++ sub topic:	"hotel/<room_num>/#"
++ pub topic:	"hotel/<room_num>/relay"
++ relay change stat	-> publish "<relay_stat>" ("1": on / "0": off)
++ relay sub data from topics:
+	"hotel/<room_num>/admin":
+		"ADMIN_RESET"		-> reset human_count to 0
+		"HUMAN_COUNT"		-> publish "[count]<human_count>"
+		"RELAY_STAT":		-> publish "<relay_stat>"
+		"RELAY_ON"/"RELAY_OFF"	-> relay_on/relay_off
+		"RELAY_CHECK"		-> publish "<room_num>_relay_ready" to comfirm
+
+	"hotel/<room_num>/ir":
+		"in"	->	human_count++
+		"out"	->	if human_count > 0 { human_count-- }
+		(human_count > 0) ? relay_on : relay_off
+
+//	"hotel/<room_num>/pir/bedroom":
+//		"[<time>]<count_data>"	-> time_bedr = <time>	bed_pir = <count_data>
+//
+//	"hotel/<room_num>/pir/bathroom":
+//		"[<time>]<count_data>"	-> time_bathr = <time>	bath_pir = <count_data>
+
+
+
+*IR
++ sub topic:	"hotel/<room_num>/admin"
++ pub topic:	"hotel/<room_num>/ir"
++ move in/out 	-> publish "in"/"out"
++ ir sub data:
+	"IR_CHECK"	-> publish "<room_num>_ir_ready" to comfirm
+
+*PIR
++ sub topic:	"hotel/<room_num>/admin"
++ bedroom pir:
+	pub topic:	""
+
++ bathroom pir:
+	pub topic:	""
+
+*SCRIPT
++ sub topic:	"hotel/+/relay"
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////

@@ -17,10 +17,10 @@ def on_message(client, userdata, message):
     end = "/relay"
     room = int(_topic[len(start):-len(end)])
     
-    floor = room%100
-    room_floor = int(room/100)
+    room_floor = room%100
+    floor = int(room/100)
 
-    hotel[room_floor-1][floor-1] = _data
+    hotel[floor-1][room_floor-1] = _data
     print(hotel)
     print("By floors")
     for i in hotel:
