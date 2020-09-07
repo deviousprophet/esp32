@@ -22,15 +22,18 @@
 #define SUB_TOPIC       "hotel/" ROOM_NUM "/#"
 #define PUB_TOPIC       "hotel/" ROOM_NUM "/relay"
 
+#define RELAY_ON        0
+#define RELAY_OFF       1
+
 bool mqtt_en = false;
+bool admin_ctrl = false;
 int human_cnt = 0;
 
 static const char *TAG = "MQTT_RELAY";
 
 esp_mqtt_client_handle_t client;
 
-static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
-{
+static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     client = event->client;
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
@@ -57,22 +60,25 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
             break;
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            
+            // _topic: string of Topic
+            // _data: string of Data
             char _topic[1000], _data[1000];
             memcpy(_topic, event->topic, event->topic_len);
-            _topic[event->topic_len] = '\0';
             memcpy(_data, event->data, event->data_len);
+            _topic[event->topic_len] = '\0';
             _data[event->data_len] = '\0';
-            // _topic: Topic string
-            // _data: Data string
+
+            int prev_stat = gpio_get_level(GPIO_RELAY);
+
             if (strcmp(_topic, "hotel/" ROOM_NUM "/admin") == 0) {
                 if (strcmp(_data, "RELAY_STAT") == 0) {
-                    esp_mqtt_client_publish(client, PUB_TOPIC, (gpio_get_level(GPIO_RELAY) == 0)?"1":"0", 0, 0, 0);
-                } else if (strcmp(_data, "RELAY_ON") == 0) {
-                    gpio_set_level(GPIO_RELAY, 0);
-                    esp_mqtt_client_publish(client, PUB_TOPIC, (gpio_get_level(GPIO_RELAY) == 0)?"1":"0", 0, 0, 0);
-                } else if (strcmp(_data, "RELAY_OFF") == 0) {
-                    gpio_set_level(GPIO_RELAY, 1);
-                    esp_mqtt_client_publish(client, PUB_TOPIC, (gpio_get_level(GPIO_RELAY) == 0)?"1":"0", 0, 0, 0);
+                    esp_mqtt_client_publish(client, PUB_TOPIC,
+                                            (gpio_get_level(GPIO_RELAY) == RELAY_ON) ? "1" : "0", 0, 0, 0);
+                } else if (strcmp(_data, "RELAY_ENABLE") == 0) {
+                    admin_ctrl = true;
+                } else if (strcmp(_data, "RELAY_DISABLE") == 0) {
+                    admin_ctrl = false;
                 } else if (strcmp(_data, "RELAY_CHECK") == 0) {
                     esp_mqtt_client_publish(client, PUB_TOPIC, ROOM_NUM "_relay_ready", 0, 0, 0);
                 } else if (strcmp(_data, "ADMIN_RESET") == 0) {
@@ -83,12 +89,19 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
                 if (strcmp(_data, "in") == 0) {
                     human_cnt++;
                 } else if (strcmp(_data, "out") == 0) {
-                    if (human_cnt > 0){
+                    if (human_cnt > 0) {
                         human_cnt--;
                     }
                 }
-                (human_cnt > 0) ? gpio_set_level(GPIO_RELAY, 0) : gpio_set_level(GPIO_RELAY, 1);;
                 printf("Count: %d\n" ,human_cnt);
+            }
+
+            ((human_cnt > 0) && admin_ctrl) ?
+            gpio_set_level(GPIO_RELAY, RELAY_ON) : gpio_set_level(GPIO_RELAY, RELAY_OFF);
+            
+            if (prev_stat != gpio_get_level(GPIO_RELAY)) {
+                esp_mqtt_client_publish(client, PUB_TOPIC,
+                                        (gpio_get_level(GPIO_RELAY) == RELAY_ON) ? "1" : "0", 0, 0, 0);
             }
             break;
         case MQTT_EVENT_ERROR:
@@ -106,8 +119,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     mqtt_event_handler_cb(event_data);
 }
 
-static void mqtt_app_start(void)
-{
+static void mqtt_app_start(void) {
     esp_mqtt_client_config_t mqtt_cfg = {
         .uri = MQTT_SERVER,
     };
@@ -164,5 +176,5 @@ void app_main() {
     esp_event_loop_create_default();
     wifi_init_sta();
     gpioConf();
-    gpio_set_level(GPIO_RELAY, 1);
+    gpio_set_level(GPIO_RELAY, RELAY_OFF);
 }
