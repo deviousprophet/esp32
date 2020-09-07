@@ -25,7 +25,6 @@ def on_disconnect (client, userdata, rc):
 def on_connect (client, obj, flags, rc):
     print("MQTT Connected")
     client.subscribe(subTopic)
-    polling_relay()
 
 def mqtt_client():
     client.on_message=on_message
@@ -36,10 +35,8 @@ def mqtt_client():
     client.loop_forever()
 
 def polling_relay():
-    for floor in range(4):
-        for room in range(5):
-            room_num = str((floor + 1)*100 + room + 1)
-            client.publish("hotel/" + room_num + "/admin", "RELAY_STAT")
+    for room in localRooms:
+        client.publish("hotel/" + str(room['name']) + "/relay", "RELAY_STAT")
 
 def initfromdb():
     for room in dbRooms.find({}, projection={'_id': False, 'name': True, 'state': True, 'isOpen': True}):
