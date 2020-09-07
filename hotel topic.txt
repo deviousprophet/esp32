@@ -1,30 +1,15 @@
-PIR
-	Sub
-	hotel/101/admin
-	
-	Pub
-	hotel/101/pir/mainroom
-	hotel/101/pir/bathroom
 
-RELAY
-	Sub
-	hotel/101/admin
+HOTEL TOPICS
 
-	Pub
-	hotel/101/relay
-
-PIR
-	Sub
-	hotel/101/admin
-
-	Pub
-	hotel/101/ir
-
-SCRIPT
-	Sub
-	hotel/+/relay
-
-	Pub
-	hotel/101/admin
-	hotel/102/admin
-	...
+	+-----------+-----------------------------------+---------------------------------------+
+	|			|		Subscribe Topic				|			Publish Topic				|
+	+-----------+-----------------------------------+---------------------------------------+
+	|	PIR		|	hotel/<room_num>/admin			|	hotel/<room_num>/pir/mainroom		|
+	|			|									|	hotel/<room_num>/pir/bathroom		|
+	+-----------+-----------------------------------+---------------------------------------+
+	|	RELAY	|	hotel/<room_num>/admin			|	hotel/<room_num>/relay				|
+	+-----------+-----------------------------------+---------------------------------------+
+	|	IR		|	hotel/<room_num>/admin			|	hotel/<room_num>/ir					|
+	+-----------+-----------------------------------+---------------------------------------+
+	|	SCRIPT	|	hotel/+/relay					|	hotel/<room_num>/admin				|
+	+-----------+-----------------------------------+---------------------------------------+

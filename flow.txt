@@ -1,48 +1,49 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-*RELAY
-+ sub topic:	"hotel/<room_num>/#"
-+ pub topic:	"hotel/<room_num>/relay"
-+ relay change stat	-> publish "<relay_stat>" ("1": on / "0": off)
-+ relay sub data from topics:
-	"hotel/<room_num>/admin":
-		"ADMIN_RESET"		-> reset human_count to 0
-		"HUMAN_COUNT"		-> publish "[count]<human_count>"
-		"RELAY_STAT":		-> publish "<relay_stat>"
-		"RELAY_ON"/"RELAY_OFF"	-> relay_on/relay_off
-		"RELAY_CHECK"		-> publish "<room_num>_relay_ready" to comfirm
+*RELAY:
+	+ MQTT data handling:
+		
+		Data from "hotel/<room_num>/admin":
+		+---------------------------------------+-----------------------------------------------+
+		|				Data					|					Action						|
+		+---------------------------------------+-----------------------------------------------+
+		|	"ADMIN_RESET"						|	human_count = 0								|
+		+---------------------------------------+-----------------------------------------------+
+		|	"HUMAN_COUNT"						|	publish "[count]<human_count>"				|
+		+---------------------------------------+-----------------------------------------------+
+		|	"RELAY_STAT":						|	publish "<relay_current_state>"				|
+		+---------------------------------------+-----------------------------------------------+
+		|	"RELAY_ENABLBE"/"RELAY_DISABLE"		|	admin_ctrl = true/false						|
+		+---------------------------------------+-----------------------------------------------+
+		|	"RELAY_CHECK"						|	publish "<room_num>_relay_ready"			|
+		+---------------------------------------+-----------------------------------------------+
 
-	"hotel/<room_num>/ir":
-		"in"	->	human_count++
-		"out"	->	if human_count > 0 { human_count-- }
-		(human_count > 0) ? relay_on : relay_off
+		Data from "hotel/<room_num>/ir":
+		+---------------------------------------+-----------------------------------------------+
+		|				Data					|					Action						|
+		+---------------------------------------+-----------------------------------------------+
+		|	"in"								|	human_count++								|
+		+---------------------------------------+-----------------------------------------------+
+		|	"out"								|	if (human_count > 0) { human_count-- }		|
+		+---------------------------------------+-----------------------------------------------+
 
-//	"hotel/<room_num>/pir/bedroom":
-//		"[<time>]<count_data>"	-> time_bedr = <time>	bed_pir = <count_data>
-//
-//	"hotel/<room_num>/pir/bathroom":
-//		"[<time>]<count_data>"	-> time_bathr = <time>	bath_pir = <count_data>
+	+ Main processing:
+		((human_count > 0) && (admin_ctrl)) ? relay_on : relay_off
+		if state change	->	publish "<relay_current_state>"
 
+*IR:
+	+ MQTT data handling:
+		+---------------------------------------+-----------------------------------------------+
+		|				Data					|					Action						|
+		+---------------------------------------+-----------------------------------------------+
+		|	"IR_CHECK"							|	publish "<room_num>_ir_ready"				|
+		+---------------------------------------+-----------------------------------------------+
 
+	+ Main processing:
+		someone moving in/out 	-> publish "in"/"out"
 
-*IR
-+ sub topic:	"hotel/<room_num>/admin"
-+ pub topic:	"hotel/<room_num>/ir"
-+ move in/out 	-> publish "in"/"out"
-+ ir sub data:
-	"IR_CHECK"	-> publish "<room_num>_ir_ready" to comfirm
-
-*PIR
-+ sub topic:	"hotel/<room_num>/admin"
-+ bedroom pir:
-	pub topic:	""
-
-+ bathroom pir:
-	pub topic:	""
-
-*SCRIPT
-+ sub topic:	"hotel/+/relay"
+*SCRIPT:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
