@@ -63,7 +63,7 @@ def db_read():
         retfromdb()
 
 mongo_client = pymongo.MongoClient(
-"mongodb+srv://minhtaile2712:imissyou@cluster0-wyhfl.mongodb.net/test?retryWrites=true&w=majority")
+    "mongodb+srv://minhtaile2712:imissyou@cluster0-wyhfl.mongodb.net/test?retryWrites=true&w=majority")
 db = mongo_client.test
 dbRooms = db.rooms
 initfromdb()
