@@ -45,10 +45,11 @@ HOTEL TOPICS
 
 	+ Main processing:
 		((human_count > 0) && (admin_ctrl)) ? relay_on : relay_off
-		if state change	->	publish "<relay_current_state>"
+		relay state change	->	publish "<relay_current_state>"
 
 *IR:
 	+ MQTT data handling:
+
 		+---------------------------------------+-----------------------------------------------+
 		|		Data			|		Action				|
 		+---------------------------------------+-----------------------------------------------+
@@ -56,12 +57,22 @@ HOTEL TOPICS
 		+---------------------------------------+-----------------------------------------------+
 
 	+ Main processing:
-		someone moving in/out 	-> publish "in"/"out"
+		someone moves in/out 	-> publish "in"/"out"
 
 *SCRIPT:
 	+ MQTT data handling:
 
-	+ Main processing:
+		Data from "hotel/<room_num>/relay":
+		+---------------------------------------+-----------------------------------------------+
+		|		Data			|		Action				|
+		+---------------------------------------+-----------------------------------------------+
+		|	"<relay_current_state>"		|	update 'state' value of <room_num>	|
+		|					|	in database				|
+		+---------------------------------------+-----------------------------------------------+
+
+	+ Database processing:
+		'isOpen' value of <room_num> change	->	pulish "RELAY_ENABLE"/"RELAY_DISABLE"
+								to "hotel/<room_num>/relay"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
